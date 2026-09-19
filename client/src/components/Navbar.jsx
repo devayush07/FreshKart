@@ -2,9 +2,11 @@ import React, { useContext, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { AppContext } from "../context/AppContext";
 import { assets } from "../assets/assets";
+import UserProfileModal from "./UserProfileModal";
 
 const Navbar = () => {
   const [open, setOpen] = useState(false);
+  const [showProfileModal, setShowProfileModal] = useState(false);
 
   const {
     user,
@@ -59,17 +61,17 @@ const Navbar = () => {
             <path
               d="M10.836 10.615 15 14.695"
               stroke="#7A7B7D"
-              stroke-width="1.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
             <path
-              clip-rule="evenodd"
+              clipRule="evenodd"
               d="M9.141 11.738c2.729-1.136 4.001-4.224 2.841-6.898S7.67.921 4.942 2.057C2.211 3.193.94 6.281 2.1 8.955s4.312 3.92 7.041 2.783"
               stroke="#7A7B7D"
-              stroke-width="1.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             />
           </svg>
         </div>
@@ -90,14 +92,20 @@ const Navbar = () => {
         {user ? (
           <>
             <div className="relative group">
-              <img src={assets.profile_icon} alt="" className="w-10" />
-              <ul className="hidden group-hover:block absolute top-10 right-0 bg-white shadow-md rounded-md border border-gray-200 py-2 w-30 z-40 text-sm">
+              <img src={assets.profile_icon} alt="" className="w-10 cursor-pointer" onClick={() => setShowProfileModal(true)} />
+              <ul className="hidden group-hover:block absolute top-10 right-0 bg-white shadow-md rounded-md border border-gray-200 py-2 w-32 z-40 text-sm">
+                <li
+                  onClick={() => setShowProfileModal(true)}
+                  className="px-3 py-1.5 cursor-pointer hover:bg-gray-100 font-medium text-emerald-700"
+                >
+                  My Profile
+                </li>
                 <li
                   onClick={() => {
                     navigate("/my-orders");
                     scrollTo(0, 0);
                   }}
-                  className="p-1.5 cursor-pointer"
+                  className="px-3 py-1.5 cursor-pointer hover:bg-gray-100"
                 >
                   My Orders
                 </li>
@@ -106,7 +114,7 @@ const Navbar = () => {
                     setUser(null);
                     navigate("/");
                   }}
-                  className="p-1.5 cursor-pointer"
+                  className="px-3 py-1.5 cursor-pointer hover:bg-gray-100 text-red-600"
                 >
                   Logout
                 </li>
@@ -173,6 +181,12 @@ const Navbar = () => {
           </button>
         )}
       </div>
+
+      {/* User Profile Modal */}
+      <UserProfileModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+      />
     </nav>
   );
 };
