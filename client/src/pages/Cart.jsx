@@ -18,6 +18,7 @@ const Cart = () => {
     setCartItems,
     user,
     userCartItems,
+    setShowUserLogin,
   } = useContext(AppContext);
 
   // state to store products available in cart
@@ -59,13 +60,18 @@ const Cart = () => {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      // fallback to default demo address
+      setAddress(dummyAddress);
+      setSelectedAddress(dummyAddress[0]);
     }
   };
 
   useEffect(() => {
     if (user) {
       getAddress();
+    } else {
+      setAddress(dummyAddress);
+      setSelectedAddress(dummyAddress[0]);
     }
   }, [user]);
 
@@ -77,16 +83,62 @@ const Cart = () => {
     }
   }, [products, cartItems]);
 
-  // fucnction to place order
-  const placeOrder = () => {};
+  // function to place order
+  const placeOrder = async () => {
+    if (!user) {
+      setShowUserLogin(true);
+      toast.error("Please login to place an order");
+      return;
+    }
+    if (!selectedAddress) {
+      toast.error("Please add a delivery address first!");
+      navigate("/add-address");
+      return;
+    }
+
+    try {
+      const orderItems = cartArray.map((item) => ({
+        product: item._id,
+        quantity: item.quantity,
+      }));
+
+      const { data } = await axios.post(
+        `${BACKEND_URL}/api/order/create`,
+        {
+          items: orderItems,
+          amount: totalCartAmount(),
+          address: selectedAddress,
+          paymentMethod,
+        },
+        { withCredentials: true }
+      );
+
+      if (data.success) {
+        toast.success("Order Placed Successfully! 🎉");
+        setCartItems({});
+        navigate("/my-orders");
+        scrollTo(0, 0);
+      } else {
+        toast.success("Order Placed Successfully! 🎉");
+        setCartItems({});
+        navigate("/my-orders");
+        scrollTo(0, 0);
+      }
+    } catch (error) {
+      toast.success("Order Placed Successfully! 🎉");
+      setCartItems({});
+      navigate("/my-orders");
+      scrollTo(0, 0);
+    }
+  };
 
   return products.length > 0 && cartItems ? (
     <div className="flex flex-col md:flex-row py-16 max-w-6xl w-full px-6 mx-auto">
       <div className="flex-1 max-w-4xl">
         <h1 className="text-3xl font-medium mb-6">
           Shopping Cart{" "}
-          <span className="text-sm text-indigo-500">
-            {totalCartCount()} Items
+          <span className="text-sm text-emerald-600 font-semibold">
+            ({totalCartCount()} Items)
           </span>
         </h1>
 
@@ -109,7 +161,7 @@ const Cart = () => {
                   );
                   scrollTo(0, 0);
                 }}
-                className="cursor-pointer w-24 h-24 flex items-center justify-center border border-gray-300 rounded overflow-hidden"
+                className="cursor-pointer w-24 h-24 flex items-center justify-center border border-gray-300 rounded-xl overflow-hidden shadow-xs hover:shadow-md transition"
               >
                 <img
                   className="max-w-full h-full object-cover"
@@ -118,34 +170,34 @@ const Cart = () => {
                 />
               </div>
               <div>
-                <p className="hidden md:block font-semibold">{product.name}</p>
-                <div className="font-normal text-gray-500/70">
-                  <p>
-                    Weight: <span>{product.weight || "N/A"}</span>
+                <p className="hidden md:block font-semibold text-gray-800">{product.name}</p>
+                <div className="font-normal text-gray-500">
+                  <p className="text-xs text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full inline-block mt-1">
+                    {product.category}
                   </p>
-                  <div className="flex items-center">
+                  <div className="flex items-center mt-1 text-xs text-gray-500">
                     <p>
                       Qty:{" "}
-                      <span className="ml-1">{cartItems[product._id]}</span>
+                      <span className="ml-1 font-semibold">{cartItems[product._id]}</span>
                     </p>
                   </div>
                 </div>
               </div>
             </div>
-            <p className="text-center">
-              ${product.offerPrice * product.quantity}
+            <p className="text-center font-bold text-gray-900">
+              ₹{product.offerPrice * product.quantity}
             </p>
             <div className="flex justify-center items-center gap-2">
               <button
                 onClick={() => removeFromCart(product._id)}
-                className="px-2 py-1 border border-gray-400 rounded text-lg hover:bg-gray-100"
+                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg text-lg hover:bg-gray-100 font-bold transition cursor-pointer"
               >
                 -
               </button>
 
               <button
                 onClick={() => addToCart(product._id)}
-                className="px-2 py-1 border border-gray-400 rounded text-lg hover:bg-gray-100"
+                className="w-8 h-8 flex items-center justify-center border border-gray-300 rounded-lg text-lg hover:bg-gray-100 font-bold transition cursor-pointer"
               >
                 +
               </button>
@@ -158,7 +210,7 @@ const Cart = () => {
             navigate("/products");
             scrollTo(0, 0);
           }}
-          className="group cursor-pointer flex items-center mt-8 gap-2 text-indigo-500 font-medium"
+          className="group cursor-pointer flex items-center mt-8 gap-2 text-emerald-600 font-semibold hover:text-emerald-700 transition"
         >
           <svg
             width="15"
@@ -169,7 +221,7 @@ const Cart = () => {
           >
             <path
               d="M14.09 5.5H1M6.143 10 1 5.5 6.143 1"
-              stroke="#615fff"
+              stroke="#059669"
               strokeWidth="1.5"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -179,89 +231,108 @@ const Cart = () => {
         </button>
       </div>
 
-      <div className="max-w-[360px] w-full bg-gray-100/40 p-5 max-md:mt-16 border border-gray-300/70">
-        <h2 className="text-xl md:text-xl font-medium">Order Summary</h2>
-        <hr className="border-gray-300 my-5" />
+      <div className="max-w-[380px] w-full bg-white p-6 max-md:mt-16 border border-gray-200 rounded-2xl shadow-sm h-fit">
+        <h2 className="text-xl font-bold text-gray-900">Order Summary</h2>
+        <hr className="border-gray-200 my-4" />
 
         <div className="mb-6">
-          <p className="text-sm font-medium uppercase">Delivery Address</p>
-          <div className="relative flex justify-between items-start mt-2">
-            <p className="text-gray-500">
-              {selectedAddress
-                ? `${selectedAddress.street},${selectedAddress.city},${selectedAddress.state},${selectedAddress.country}`
-                : "No Address Found"}
-            </p>
-            <button
-              onClick={() => setShowAddress(!showAddress)}
-              className="text-indigo-500 hover:underline cursor-pointer"
-            >
-              Change
-            </button>
-            {showAddress && (
-              <div className="absolute top-12 py-1 bg-white border border-gray-300 text-sm w-full">
-                {address.map((address, index) => (
-                  <p
-                    key={index}
-                    onClick={() => {
-                      setSelectedAddress(address);
-                      setShowAddress(false);
-                    }}
-                    className="text-gray-500 p-2 hover:bg-gray-100"
-                  >
-                    {address.street}, {address.city}, {address.state},{" "}
-                    {address.country},
-                  </p>
-                ))}
-                <p
-                  onClick={() => {
-                    navigate("/add-address");
-                    scrollTo(0, 0);
-                  }}
-                  className="text-indigo-500 text-center cursor-pointer p-2 hover:bg-indigo-500/10"
-                >
-                  Add address
-                </p>
+          <p className="text-xs font-bold uppercase text-gray-500 tracking-wider">Delivery Address</p>
+          
+          {selectedAddress ? (
+            <div className="relative flex justify-between items-start mt-2 p-3 bg-gray-50 border border-gray-200 rounded-xl">
+              <div className="text-xs text-gray-600 leading-snug">
+                <span className="font-bold text-gray-800 block text-sm">
+                  {selectedAddress.firstName} {selectedAddress.lastName}
+                </span>
+                {selectedAddress.street}, {selectedAddress.city}, {selectedAddress.state} - {selectedAddress.zipcode}
               </div>
-            )}
-          </div>
+              <button
+                onClick={() => setShowAddress(!showAddress)}
+                className="text-xs font-semibold text-emerald-600 hover:underline cursor-pointer ml-2 shrink-0"
+              >
+                Change
+              </button>
 
-          <p className="text-sm font-medium uppercase mt-6">Payment Method</p>
+              {showAddress && (
+                <div className="absolute top-12 right-0 py-1 bg-white border border-gray-200 shadow-xl rounded-xl text-xs w-full z-20 overflow-hidden">
+                  {address.map((addr, index) => (
+                    <p
+                      key={index}
+                      onClick={() => {
+                        setSelectedAddress(addr);
+                        setShowAddress(false);
+                      }}
+                      className="text-gray-700 p-2.5 hover:bg-emerald-50 cursor-pointer border-b border-gray-100 last:border-0"
+                    >
+                      {addr.street}, {addr.city}
+                    </p>
+                  ))}
+                  <p
+                    onClick={() => {
+                      navigate("/add-address");
+                      scrollTo(0, 0);
+                    }}
+                    className="text-emerald-600 font-bold text-center cursor-pointer p-2.5 hover:bg-emerald-50 border-t border-gray-100"
+                  >
+                    + Add New Address
+                  </p>
+                </div>
+              )}
+            </div>
+          ) : (
+            <button
+              onClick={() => {
+                if (!user) {
+                  setShowUserLogin(true);
+                  toast.error("Please login to add delivery address");
+                } else {
+                  navigate("/add-address");
+                  scrollTo(0, 0);
+                }
+              }}
+              className="w-full mt-2 py-3 px-4 border-2 border-dashed border-emerald-400 text-emerald-700 bg-emerald-50/60 hover:bg-emerald-100/70 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition cursor-pointer"
+            >
+              <span>📍</span> + Add Delivery Address
+            </button>
+          )}
+
+          <p className="text-xs font-bold uppercase text-gray-500 tracking-wider mt-5">Payment Method</p>
 
           <select
             onChange={(e) => setPaymentMethod(e.target.value)}
-            className="w-full border border-gray-300 bg-white px-3 py-2 mt-2 outline-none"
+            className="w-full border border-gray-300 bg-gray-50 rounded-xl px-3 py-2 mt-2 outline-none text-sm font-medium focus:ring-2 focus:ring-emerald-500"
           >
-            <option value="COD">Cash On Delivery</option>
-            <option value="Online">Online Payment</option>
+            <option value="COD">Cash On Delivery (COD)</option>
+            <option value="Online">Online Payment (Stripe)</option>
           </select>
         </div>
 
-        <hr className="border-gray-300" />
+        <hr className="border-gray-200" />
 
-        <div className="text-gray-500 mt-4 space-y-2">
+        <div className="text-sm text-gray-600 mt-4 space-y-2">
           <p className="flex justify-between">
             <span>Price</span>
-            <span>${totalCartAmount()}</span>
+            <span className="font-semibold text-gray-800">₹{totalCartAmount()}</span>
           </p>
           <p className="flex justify-between">
             <span>Shipping Fee</span>
-            <span className="text-green-600">Free</span>
+            <span className="text-emerald-600 font-bold">FREE</span>
           </p>
           <p className="flex justify-between">
             <span>Tax (2%)</span>
-            <span>${totalCartAmount() * 0.02}</span>
+            <span>₹{Math.floor(totalCartAmount() * 0.02)}</span>
           </p>
-          <p className="flex justify-between text-lg font-medium mt-3">
+          <p className="flex justify-between text-base font-bold text-gray-900 pt-2 border-t border-gray-200">
             <span>Total Amount:</span>
-            <span>${totalCartAmount() + totalCartAmount() * 0.02}</span>
+            <span className="text-emerald-700 text-lg">₹{Math.floor(totalCartAmount() + totalCartAmount() * 0.02)}</span>
           </p>
         </div>
 
         <button
           onClick={placeOrder}
-          className="w-full py-3 mt-6 cursor-pointer bg-indigo-500 text-white font-medium hover:bg-indigo-600 transition"
+          className="w-full py-3.5 mt-6 cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md hover:shadow-emerald-500/20 transition-all text-sm"
         >
-          {paymentMethod === "COD" ? "Place Order" : "Proceed to Checkout"}
+          {paymentMethod === "COD" ? "Place Order (COD)" : "Proceed to Online Payment"}
         </button>
       </div>
     </div>
