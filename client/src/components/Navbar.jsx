@@ -18,6 +18,8 @@ const Navbar = () => {
     setSearchQuery,
     userCartItems,
     cartItems,
+    theme,
+    toggleTheme,
   } = useContext(AppContext);
 
   useEffect(() => {
@@ -32,22 +34,22 @@ const Navbar = () => {
   }, [searchQuery]);
 
   return (
-    <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 bg-white relative transition-all">
+    <nav className="flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 py-4 border-b border-gray-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-gray-800 dark:text-gray-100 relative transition-colors duration-300">
       <Link to={"/"}>
-        <h1 className="text-3xl font-bold text-emerald-600 tracking-tight flex items-center gap-1.5">
+        <h1 className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 tracking-tight flex items-center gap-1.5">
           <span>🛒</span> FreshCart
         </h1>
       </Link>
 
       {/* Desktop Menu */}
-      <div className="hidden sm:flex items-center gap-8">
-        <Link to={"/"}>Home</Link>
-        <Link to={"/products"}>All Products</Link>
+      <div className="hidden sm:flex items-center gap-6 md:gap-8">
+        <Link to={"/"} className="hover:text-emerald-600 transition">Home</Link>
+        <Link to={"/products"} className="hover:text-emerald-600 transition">All Products</Link>
 
-        <div className="hidden lg:flex items-center text-sm gap-2 border border-gray-300 px-3 rounded-full">
+        <div className="hidden lg:flex items-center text-sm gap-2 border border-gray-300 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 px-3 py-1 rounded-full">
           <input
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500"
+            className="py-1 w-full bg-transparent outline-none placeholder-gray-500 dark:placeholder-gray-400 text-gray-800 dark:text-gray-100"
             type="text"
             placeholder="Search products"
           />
@@ -76,6 +78,24 @@ const Navbar = () => {
           </svg>
         </div>
 
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
+          aria-label="Toggle Theme"
+          className="p-2 rounded-full border border-gray-200 dark:border-slate-700 bg-gray-50 dark:bg-slate-800 text-gray-700 dark:text-amber-300 hover:scale-110 active:scale-95 transition-all cursor-pointer shadow-xs"
+          title={`Switch to ${theme === "light" ? "Dark" : "Light"} mode`}
+        >
+          {theme === "light" ? (
+            <svg className="w-5 h-5 text-gray-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+          ) : (
+            <svg className="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          )}
+        </button>
+
         <div
           onClick={() => {
             navigate("/cart");
@@ -83,8 +103,8 @@ const Navbar = () => {
           }}
           className="relative cursor-pointer"
         >
-          <img src={assets.cart_icon} alt="" className="w-7 h-7" />
-          <button className="absolute -top-2 -right-3 text-xs text-white bg-indigo-500 w-[18px] h-[18px] rounded-full">
+          <img src={assets.cart_icon} alt="" className="w-7 h-7 dark:invert" />
+          <button className="absolute -top-2 -right-3 text-xs text-white bg-emerald-600 w-[18px] h-[18px] rounded-full font-bold">
             {totalCartCount()}
           </button>
         </div>

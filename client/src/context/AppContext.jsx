@@ -15,6 +15,23 @@ const AppContextProvider = ({ children }) => {
   const [products, setProducts] = useState(dummyProducts);
   const [cartItems, setCartItems] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [theme, setTheme] = useState(
+    localStorage.getItem("freshcart_theme") || "light"
+  );
+
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
+    localStorage.setItem("freshcart_theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
 
   // check seller status
   const fetchSeller = async () => {
@@ -185,6 +202,9 @@ const AppContextProvider = ({ children }) => {
     fetchUser,
     setCartItems,
     userCartItems,
+    theme,
+    setTheme,
+    toggleTheme,
   };
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;

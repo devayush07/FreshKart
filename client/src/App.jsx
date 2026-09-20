@@ -24,7 +24,7 @@ const App = () => {
   const isSellerPath = useLocation().pathname.includes("seller");
 
   return (
-    <div className="text-default min-h-screen">
+    <div className="text-default min-h-screen bg-white dark:bg-slate-950 text-gray-900 dark:text-gray-100 transition-colors duration-300">
       {isSellerPath ? null : <Navbar />}
       {showUserLogin ? <Auth /> : null}
       <Toaster />
